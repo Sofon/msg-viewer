@@ -8,7 +8,7 @@ const $file = document.getElementById("file")!;
 $file.addEventListener("change", async (event) => {
   const target = event.target as HTMLInputElement;
   if (target?.files?.length === 0) return;
-  updateMessage(target.files!);
+  updateMessage(await target.files![0].arrayBuffer());
 });
 
 // To reset the file input
@@ -26,11 +26,10 @@ target.addEventListener("drop", (event) => {
   
   const $file = document.getElementById("file")! as HTMLInputElement;
   $file.files = files;
-  updateMessage(files);
+  updateMessage(files[0].arrayBuffer());
 });
 
-async function updateMessage(files: FileList) {
-  const arrayBuffer = await files[0].arrayBuffer();
+async function updateMessage(arrayBuffer: ArrayBuffer) {
   const $msg = document.getElementById("msg")!;
   renderMessage($msg, 
     () => parse(new DataView(arrayBuffer)), 
@@ -61,3 +60,27 @@ function renderMessage($msg: HTMLElement, getMessage: () => Message, updateDom: 
 
   updateDom(fragment);
 }
+
+async function fetchMsgFile(url: string): Promise<ArrayBuffer> {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch MSG file from URL: ${url}`);
+  }
+  return await response.arrayBuffer();
+}
+
+function handleUrlParameters() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const msgUrl = urlParams.get("msgUrl");
+  if (msgUrl) {
+    fetchMsgFile(msgUrl)
+      .then(arrayBuffer => updateMessage(arrayBuffer))
+      .catch(error => {
+        const $msg = document.getElementById("msg")!;
+        const fragment = errorFragment(`An error occurred while fetching the MSG file from URL. Error: ${error}`);
+        $msg.replaceChildren(fragment);
+      });
+  }
+}
+
+window.addEventListener("load", handleUrlParameters);
