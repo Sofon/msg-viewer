@@ -5,13 +5,15 @@ import * as path from 'path';
 const SOURCE_DIR = "./lib";
 const DEST_DIR = "./build";
 
-try {
-  await clearDestDir();
-  await createDestDir();
-  await copyResourceFiles();
-  await build();
-} catch(err) {
-  console.error("Failed to build. Error: ", err);
+async function main() {
+  try {
+    await clearDestDir();
+    await createDestDir();
+    await copyResourceFiles();
+    await build();
+  } catch(err) {
+    console.error("Failed to build. Error: ", err);
+  }
 }
 
 async function copyResourceFiles() {
@@ -76,3 +78,5 @@ async function createDestDir(){
     console.error(`Failed to create destination folder "${DEST_DIR}".`);
   }
 }
+
+main();
